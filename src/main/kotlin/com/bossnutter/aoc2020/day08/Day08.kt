@@ -2,63 +2,48 @@ package com.bossnutter.aoc2020.day08
 
 import java.io.File
 import java.util.stream.Collectors
+import java.util.stream.IntStream
 
 fun main() {
     println("Example: ${Computer().executeProgram(getProgram("example.txt"))}")
     println("Answer 1: ${Computer().executeProgram(getProgram("input.txt"))}")
-    println("Answer 2: ${answer2()}")
-
+    println("Answer 2: ${answer2(getProgram("input.txt"))}")
 }
 
-fun answer2(): Int {
-    val program = getProgram("input.txt")
-    var instructionToMutate = findNextInstructionToMutate(program, 0)
+fun answer2(program: List<Instruction>): Int {
+    val instructionIndexesToMutate = IntStream.range(0, program.size)
+        .filter { program[it].operation in setOf("nop", "jmp") }
+        .boxed()
+        .collect(Collectors.toList())
 
-//    val instructionsToMutate = program.stream()
-//        .filter { it.operation in setOf("nop", "jmp") }
-//        .collect(Collectors.toList())
-//        .iterator()
-
-    val (accumulator, programExited) = Computer().executeProgram(program)
-
-    var acc = 0
-
-    while(!programExited) {
-        println("Mutating instruction ${instructionToMutate}")
-        val (accumulator, programExited) = Computer().executeProgram(mutateInstruction(program, instructionToMutate))
+    for (i in instructionIndexesToMutate) {
+        println("Mutating instruction ${i}")
+        val (accumulator, programExited) = Computer().executeProgram(mutateInstructionInProgram(program, i))
         println("${accumulator}, ${programExited}")
-        acc = accumulator
-        instructionToMutate = findNextInstructionToMutate(program, instructionToMutate + 1)
+        if (programExited) {
+            return accumulator
+        }
     }
-
-    return acc
+    throw RuntimeException("bad")
 }
 
-fun mutateInstruction(program: List<Instruction>, instructionToMutate: Int): List<Instruction> {
+fun mutateInstructionInProgram(program: List<Instruction>, instructionToMutate: Int): List<Instruction> {
     val newProgram = program.toMutableList()
     val originalInstruction = newProgram[instructionToMutate]
     newProgram.removeAt(instructionToMutate)
-    if (originalInstruction.operation == "jmp") {
-        newProgram.add(instructionToMutate, Instruction("nop", originalInstruction.argument))
-    } else if (originalInstruction.operation == "nop") {
-        newProgram.add(instructionToMutate, Instruction("jmp", originalInstruction.argument))
-    } else {
-        throw RuntimeException("baddd")
+    when (originalInstruction.operation) {
+        "jmp" -> {
+            newProgram.add(instructionToMutate, Instruction("nop", originalInstruction.argument))
+        }
+        "nop" -> {
+            newProgram.add(instructionToMutate, Instruction("jmp", originalInstruction.argument))
+        }
+        else -> {
+            throw RuntimeException("baddd")
+        }
     }
     return newProgram
 }
-
-
-
-fun findNextInstructionToMutate(program: List<Instruction>, startFromIndex: Int): Int {
-    for (i in startFromIndex until program.size) {
-        if (program[i].operation in setOf("jmp", "nop")) {
-            return i
-        }
-    }
-    return -1
-}
-
 
 fun getProgram(file: String): List<Instruction> {
     return File("src/main/resources/day08/${file}").readLines().stream()

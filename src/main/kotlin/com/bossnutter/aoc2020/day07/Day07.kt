@@ -8,13 +8,13 @@ fun main() {
     println("Example (rec): ${answer1rec(getRuleList("example.txt"), setOf("shiny gold")).size}")
     println("Answer 1: ${answer1(getRuleList("input.txt"))}")
     println("Answer 1 (rec): ${answer1rec(getRuleList("input.txt"), setOf("shiny gold")).size}")
-    println("Example 2: ${answer2(getRuleList("example2.txt"))}")
+    println("Example 2: ${answer2(getRuleList("example2.txt").map { it.colour to it }.toMap(), "shiny gold")}")
+    println("Answer 2: ${answer2(getRuleList("input.txt").map { it.colour to it }.toMap(), "shiny gold")}")
 }
 
 fun answer1(rules: List<Rule>): Int {
     var toCheck = mutableSetOf("shiny gold")
     var toCheckNext = mutableSetOf<String>()
-    var count = 0;
     val matchedRules = mutableSetOf<Rule>()
 
     while (toCheck.size > 0) {
@@ -34,15 +34,10 @@ fun answer1(rules: List<Rule>): Int {
 }
 
 fun answer1rec(rules: List<Rule>, colours: Set<String>): Set<Rule> {
-//    val allMatchedRules = mutableSetOf<Rule>()
     val allMatchedRules = colours.stream()
             .map { findRulesThatCanContainThisColour(rules, it) }
             .reduce { a, b -> a union b }
             .get()
-
-//    for (colour in colours) {
-//        allMatchedRules.addAll(findRulesThatCanContainThisColour(rules, colour))
-//    }
     if (allMatchedRules.isNotEmpty()) {
         return allMatchedRules union answer1rec(rules, allMatchedRules.stream()
                 .map { it.colour }
@@ -57,8 +52,17 @@ fun findRulesThatCanContainThisColour(rules: List<Rule>, colour: String): Set<Ru
             .collect(Collectors.toSet())
 }
 
-fun answer2(rules: List<Rule>): Int {
-    return 0
+fun answer2(rules: Map<String, Rule>, colour: String): Int {
+    val rule = rules[colour]!!
+    var count = getNumberOfContainedBags(rule)
+    for (bagQuantity in rule.bagQuantites) {
+        count += bagQuantity.quantity * answer2(rules, bagQuantity.colour)
+    }
+    return count
+}
+
+fun getNumberOfContainedBags(rule: Rule): Int {
+    return rule.bagQuantites.stream().map { it.quantity }.reduce(0, Integer::sum)
 }
 
 fun getRuleList(file: String): List<Rule> {

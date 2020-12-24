@@ -10,10 +10,10 @@ fun main() {
     println(measureTimeMillisAndReturn({ time -> println("Answer 2 took: ${time} (ms)")}, { answer2(expenses) }))
 }
 
-fun answer1(numbers: List<Int>): Int {
+fun answer1(numbers: List<Long>): Long {
     for (x in numbers) {
         for (y in numbers) {
-            if (x + y == 2020) {
+            if (x + y == 2020L) {
                 return x * y;
             }
         }
@@ -21,11 +21,11 @@ fun answer1(numbers: List<Int>): Int {
     throw RuntimeException()
 }
 
-fun answer2(numbers: List<Int>): Int {
+fun answer2(numbers: List<Long>): Long {
     for (x in numbers) {
         for (y in numbers) {
             for (z in numbers) {
-                if (x + y + z == 2020) {
+                if (x + y + z == 2020L) {
                     return x * y * z;
                 }
             }
